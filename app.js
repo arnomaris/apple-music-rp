@@ -64,7 +64,14 @@ const setPresence = async(currentTrack, isPlaying) => {
                     }
                 })
             } else {
-                //TO DO disable client activity
+                client.setActivity({
+                    state: "Paused",
+                    details: currentTrack.name,
+                    assets: {
+                        large_image: currentTrack.album in cachedAlbums ? cachedAlbums[currentTrack.album] : "logo",
+                        large_text: currentTrack.album
+                    }
+                })
             }
         } catch (err) {
             console.log("Discord failed")
