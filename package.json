@@ -9,6 +9,7 @@
   "author": "Arno Maris",
   "license": "MIT",
   "dependencies": {
+    "axios": "^0.27.2",
     "dotenv": "^16.0.1",
     "easy-presence": "^1.2.0-oops1",
     "itunes-bridge": "^0.6.7"
