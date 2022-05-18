@@ -58,13 +58,11 @@ const setPresence = async(currentTrack, isPlaying) => {
                         large_image: currentTrack.album in cachedAlbums ? cachedAlbums[currentTrack.album] : "logo",
                         large_text: currentTrack.album
                     },
-                    // TO DO make timestamps work
-                    //timestamps: { 
-                        //start: Date.now() + currentTrack.remainingTime,
-                        //end: Date.now() + currentTrack.remainingTime, 
-                    //}
+                    timestamps: { 
+                        start: Math.floor(Date.now() / 1000) - currentTrack.elapsedTime,
+                        end: Math.floor(Date.now() / 1000) + currentTrack.remainingTime, 
+                    }
                 })
-                console.log(currentTrack.album in cachedAlbums ? cachedAlbums[currentTrack.album] : "logo")
             } else {
                 //TO DO disable client activity
             }
