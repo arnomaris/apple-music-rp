@@ -37,19 +37,13 @@ iTunesEmitter.on('paused', function(type, currentTrack){
     setPresence(currentTrack, false)
 });
 
-
 const setPresence = async(currentTrack, isPlaying) => {
     if (client) {
         console.log("Setting presence")
         try {
             if (isPlaying) {
                 if (!(currentTrack.album in cachedAlbums)) {
-                    console.log("Getting cover")
-                    let album = await axios.get(`https://itunes.apple.com/search?term=${currentTrack.album}&attribute=albumTerm&entity=song&limit=1`)
-                    if (album.data.resultCount > 0) {
-                        cachedAlbums[currentTrack.album] = album.data.results[0].artworkUrl100
-                        console.log("Got cover")
-                    }
+                    await getAlbumArt(currentTrack)
                 }
                 client.setActivity({
                     state: "by " + currentTrack.artist + " on " + currentTrack.album,
@@ -80,5 +74,20 @@ const setPresence = async(currentTrack, isPlaying) => {
     } else {
         console.log("No client")
     }
-    
+}
+
+async function getAlbumArt(track) {
+    let albums = await axios.get(`https://itunes.apple.com/search?term=${track.album}&attribute=albumTerm&entity=song`)
+    console.log("Getting cover")
+    if (albums.data.resultCount > 0) {
+        for (let i = 0; i < albums.data.resultCount; i++) {
+            let album = albums.data.results[i]
+            if (track.artist.match(album.artistName)) {
+                cachedAlbums[track.album] = album.artworkUrl100
+                break
+            }
+        }
+        console.log("Got cover")
+    }
+    return true
 }
