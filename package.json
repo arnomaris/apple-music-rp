@@ -1,0 +1,16 @@
+{
+  "name": "apple-music-rp",
+  "version": "1.0.0",
+  "description": "Apple music rich presence for discord",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo"
+  },
+  "author": "Arno Maris",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.0.1",
+    "easy-presence": "^1.2.0-oops1",
+    "itunes-bridge": "^0.6.7"
+  }
+}
