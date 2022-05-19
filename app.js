@@ -1,27 +1,13 @@
 require('dotenv').config();
 const axios = require('axios');
+const DiscordRPC = require('discord-rpc')
 const iTunes = require('itunes-bridge');
 const iTunesEmitter = iTunes.emitter;
+const rpc = new DiscordRPC.Client({ transport: 'ipc' });
 
-let connected = false;
-let client
 let cachedAlbums = {}
 
-let connectInterval = setInterval(() => {
-    console.log('Connecting to discord...')
-    client = new (require('easy-presence').EasyPresence)(process.env.DISCORD_KEY)
-    client.on('connected', () => {
-        connected = true
-        clearInterval(connectInterval)
-        console.log('Connected to discord')
-        let currentTrack = iTunes.getCurrentTrack()
-        setPresence(currentTrack, currentTrack.playerState == "playing")
-    })
-    client.on("activityUpdate", (activity) => {
-        console.log("Now you're playing", activity ? activity.name : "nothing!")
-    });
-    
-}, 1000)
+rpc.connect(process.env.DISCORD_KEY)
 
 iTunesEmitter.on('playing', function(type, currentTrack) {
     if (type === "player_state_change") {
@@ -38,46 +24,35 @@ iTunesEmitter.on('paused', function(type, currentTrack){
 });
 
 const setPresence = async(currentTrack, isPlaying) => {
-    if (client) {
-        console.log("Setting presence")
-        try{
-            if (!(currentTrack.album in cachedAlbums)) {
-                await getAlbumArt(currentTrack)
-            }
-        } catch(err) {
-            console.log("Failed to get album art")
-            console.log(err)
+    console.log("Setting presence")
+    if (!rpc) {
+        console.log('no client')
+        return
+    }
+    try{
+        if (!(currentTrack.album in cachedAlbums)) {
+            await getAlbumArt(currentTrack)
         }
-        try {
-            if (isPlaying) {
-                client.setActivity({
-                    state: "by " + currentTrack.artist + " on " + currentTrack.album,
-                    details: currentTrack.name,
-                    assets: {
-                        large_image: currentTrack.album in cachedAlbums ? cachedAlbums[currentTrack.album] : "logo",
-                        large_text: currentTrack.album
-                    },
-                    timestamps: { 
-                        start: Math.floor(Date.now() / 1000) - currentTrack.elapsedTime,
-                        end: Math.floor(Date.now() / 1000) + currentTrack.remainingTime, 
-                    }
-                })
-            } else {
-                client.setActivity({
-                    state: "Paused",
-                    details: currentTrack.name,
-                    assets: {
-                        large_image: currentTrack.album in cachedAlbums ? cachedAlbums[currentTrack.album] : "logo",
-                        large_text: currentTrack.album
-                    }
-                })
-            }
-        } catch (err) {
-            console.log("Discord failed")
-            console.log(err)
+    } catch(err) {
+        console.log("Failed to get album art")
+        console.log(err)
+    }
+    try {
+        if (isPlaying) {
+            rpc.setActivity({
+                state: "by " + currentTrack.artist + " on " + currentTrack.album,
+                details: currentTrack.name,
+                largeImageKey: currentTrack.album in cachedAlbums ? cachedAlbums[currentTrack.album] : "logo",
+                largeImageText: currentTrack.album,
+                startTimestamp: Math.floor(Date.now() / 1000) - currentTrack.elapsedTime,
+                endTimestamp: Math.floor(Date.now() / 1000) + currentTrack.remainingTime, 
+            })
+        } else {
+            rpc.clearActivity()
         }
-    } else {
-        console.log("No client")
+    } catch (err) {
+        console.log("Discord failed")
+        console.log(err)
     }
 }
 
