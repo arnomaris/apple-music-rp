@@ -40,10 +40,10 @@ const setPresence = async(currentTrack, isPlaying) => {
     try {
         if (isPlaying) {
             rpc.setActivity({
-                state: "by " + currentTrack.artist + " on " + currentTrack.album,
-                details: currentTrack.name,
+                state: ("by " + currentTrack.artist + " on " + currentTrack.album).substring(0, 128),
+                details: (currentTrack.name).substring(0, 128),
                 largeImageKey: currentTrack.album in cachedAlbums ? cachedAlbums[currentTrack.album] : "logo",
-                largeImageText: currentTrack.album,
+                largeImageText: (currentTrack.album).substring(0, 128),
                 startTimestamp: Math.floor(Date.now() / 1000) - currentTrack.elapsedTime,
                 endTimestamp: Math.floor(Date.now() / 1000) + currentTrack.remainingTime, 
             })
