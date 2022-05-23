@@ -56,20 +56,28 @@ const setPresence = async(currentTrack, isPlaying) => {
     }
 }
 
-async function getAlbumArt(track) {
-    let albums = await axios.get(encodeURI(`https://itunes.apple.com/search?term=${track.album}&attribute=albumTerm&entity=song`))
+async function getAlbumArt(track, specialSearch) {
+    let searchTerm = specialSearch ? track.artist : track.album
+    let attribute = specialSearch ? "artistTerm" : "albumTerm"
+    let entity = specialSearch ? "album" : "song"
+    let albums = await axios.get(encodeURI(`https://itunes.apple.com/search?term=${searchTerm}&attribute=${attribute}&entity=${entity}`))
     console.log("Getting cover")
     if (albums.data.resultCount > 0) {
         for (let i = 0; i < albums.data.resultCount; i++) {
             let album = albums.data.results[i]
-            if (track.artist.match(album.artistName)) {
+            if ((specialSearch && track.album.match(album.collectionName)) || (!specialSearch && track.artist.match(album.artistName))) {
                 cachedAlbums[track.album] = album.artworkUrl100
+                console.log("Got cover")
                 break
             }
         }
-        console.log("Got cover")
+        if (!(track.album in cachedAlbums)) {
+            console.log(`Found no cover match in ${albums.data.resultCount} results`)
+            await getAlbumArt(track, true)
+        }
     } else {
         console.log("Found no cover for " + track.album)
+        await getAlbumArt(track, true)
     }
-    return true
+    return
 }
