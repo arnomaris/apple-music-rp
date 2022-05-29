@@ -1,11 +1,16 @@
 require('dotenv').config();
 const axios = require('axios');
 const DiscordRPC = require('discord-rpc')
+const fs = require("fs");
 const iTunes = require('itunes-bridge');
 const iTunesEmitter = iTunes.emitter;
 const rpc = new DiscordRPC.Client({ transport: 'ipc' });
 
-let cachedAlbums = {}
+if (!fs.existsSync("./covers.json")) {
+    fs.writeFileSync("./covers.json", "{\n}")
+}
+
+let cachedAlbums = require("./covers.json")
 
 rpc.connect(process.env.DISCORD_KEY)
 
@@ -57,6 +62,8 @@ const setPresence = async(currentTrack, isPlaying) => {
 }
 
 async function getAlbumArt(track, specialSearch) {
+    if (specialSearch)
+        console.log("Special search")
     let searchTerm = specialSearch ? track.artist : track.album
     let attribute = specialSearch ? "artistTerm" : "albumTerm"
     let entity = specialSearch ? "album" : "song"
@@ -73,11 +80,15 @@ async function getAlbumArt(track, specialSearch) {
         }
         if (!(track.album in cachedAlbums)) {
             console.log(`Found no cover match in ${albums.data.resultCount} results`)
-            await getAlbumArt(track, true)
+            if (!specialSearch) {
+                await getAlbumArt(track, true)
+            }
         }
     } else {
         console.log("Found no cover for " + track.album)
-        await getAlbumArt(track, true)
+        if (!specialSearch) {
+            await getAlbumArt(track, true)
+        }
     }
     return
 }
