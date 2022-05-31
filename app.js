@@ -31,7 +31,11 @@ iTunesEmitter.on('paused', function(type, currentTrack){
 const setPresence = async(currentTrack, isPlaying) => {
     console.log("Setting presence")
     if (!rpc) {
-        console.log('no client')
+        console.log('No client')
+        return
+    }
+    if (!currentTrack || currentTrack.artist == '') {
+        console.log('Not a valid track')
         return
     }
     try{
