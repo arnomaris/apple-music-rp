@@ -11,6 +11,7 @@ if (!fs.existsSync("./covers.json")) {
 }
 
 let cachedAlbums = require("./covers.json")
+let cachedTracks = {}
 
 rpc.connect(process.env.DISCORD_KEY)
 
@@ -73,6 +74,7 @@ const setPresence = async(currentTrack, isPlaying) => {
                 largeImageText: (currentTrack.album).substring(0, 128),
                 startTimestamp: Math.floor(Date.now() / 1000) - currentTrack.elapsedTime,
                 endTimestamp: Math.floor(Date.now() / 1000) + currentTrack.remainingTime, 
+                buttons: currentTrack.album in cachedTracks ? [{label : "Play on Apple Music", url : cachedTracks[currentTrack.album]}] : undefined
             })
         } else {
             rpc.clearActivity()
@@ -96,6 +98,8 @@ async function getAlbumArt(track, specialSearch) {
             let album = albums.data.results[i]
             if ((specialSearch && track.album.match(album.collectionName)) || (!specialSearch && track.artist.match(album.artistName))) {
                 cachedAlbums[track.album] = album.artworkUrl100
+                if (album.trackViewUrl)
+                    cachedTracks[track.album] = album.trackViewUrl
                 console.log("Got cover")
                 break
             }
