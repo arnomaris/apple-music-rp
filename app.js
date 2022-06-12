@@ -26,7 +26,25 @@ iTunesEmitter.on('playing', function(type, currentTrack) {
 iTunesEmitter.on('paused', function(type, currentTrack){
     console.log(currentTrack.name+" is now paused!");
     setPresence(currentTrack, false)
-});
+})
+
+iTunesEmitter.on('stopped', function(){
+    console.log("iTunes is not longer playing!");
+    if (rpc) 
+        rpc.clearActivity()
+})
+
+rpc.on('disconnected', () => { setTimeout(async () => {
+    console.log("Discord disconnected, trying to reconnect...")
+    rpc.connect(process.env.DISCORD_KEY).then(() => {
+        let currentTrack = iTunes.getCurrentTrack()
+        setPresence(currentTrack, currentTrack.playerState == 'playing')
+    }).catch(err => console)
+}, 1500)})
+
+process.on('uncaughtException', function(err) {
+    console.log('Caught exception: ' + err)
+})
 
 const setPresence = async(currentTrack, isPlaying) => {
     console.log("Setting presence")
